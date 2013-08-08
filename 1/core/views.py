@@ -7,6 +7,7 @@ from django.utils import simplejson as json
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, View
+from django.contrib.admin.views.decorators import staff_member_required
 
 class CreateAndRedirectToEditView(CreateView):
     """
@@ -105,3 +106,23 @@ class AjaxResponseMixin(object):
 
     def delete_ajax(self, request, *args, **kwargs):
         return self.get(request, *args, **kwargs)
+
+@staff_member_required
+def syncdb(request):
+    """
+    Syncdb within browser.
+
+    Add following lines in urls.py:
+    url(r'^syncdb/', 'core.views.syncdb', name='utils_syncdb')
+    """
+    from django.core.management import call_command
+    from cStringIO import StringIO
+    import sys
+    old_stdout = sys.stdout
+    sys.stdout = mystdout = StringIO()
+    mystdout.write('<pre>')
+    call_command('syncdb', interactive = False) # Ignore superuser creation prompt.
+    mystdout.write('</pre>')
+    sys.stdout = old_stdout
+    mystdout.seek(0)
+    return HttpResponse(mystdout.read())
