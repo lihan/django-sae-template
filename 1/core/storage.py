@@ -38,7 +38,7 @@ class SaeStorage(Storage):
         try:
             o = self.client.get(self.prefix, name)
             memory_file.write(o.data)
-        except sae.storage.ObjectNotExistsError, e:
+        except sae.storage.ObjectNotExistsError, e: # FIXME: Check here later
             pass
         return memory_file
 
@@ -61,8 +61,13 @@ class SaeStorage(Storage):
     def exists(self, name):
         try:
             o = self.client.stat(self.prefix, name)
-        except sae.storage.ObjectNotExistsError, e:
+        except sae.storage.ObjectNotExistsError, e: # FIXME: Maybe deprecated
             return False
+        except sae.storage.Error, e:
+            if e[0] == 404:
+                return False
+            else:
+                raise
         return True
 
     def listdir(self,domain):
@@ -72,8 +77,13 @@ class SaeStorage(Storage):
     def size(self, name):
         try:
             stat = self.client.stat(self.prefix, name)
-        except sae.storage.ObjectNotExistsError, e:
+        except sae.storage.ObjectNotExistsError, e:  # FIXME: Maybe deprecated
             return 0
+        except sae.storage.Error, e:
+            if e[0] == 404:
+                return 0
+            else:
+                raise
         return stat.length
 
     def url(self, name):
